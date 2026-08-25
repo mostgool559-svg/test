@@ -1,0 +1,146 @@
+# UAPK v2.1.1 — CODING AGENT RULES
+
+## Start
+
+For each task read only:
+
+1. `.ai/TASK.md`
+2. `.ai/STATE.md`
+3. files explicitly listed in TASK
+
+Do not automatically read:
+
+- `BOOT.md`
+- all of `.ai/DECISIONS.md`
+- unrelated repository files
+- old chats/history
+
+If TASK references a decision ID such as D-017:
+locate and read only that decision block, stopping at its END marker.
+
+Before editing, check whether the working tree is already dirty.
+If unrelated pre-existing changes exist, STOP and report before mixing new work into them.
+
+## Ownership
+
+Coding agent MAY modify:
+
+- source files required by TASK;
+- tests required by TASK;
+- `.ai/STATE.md`.
+
+Coding agent MUST NOT modify:
+
+- `BOOT.md`
+- `.ai/TASK.md`
+- `.ai/DECISIONS.md`
+- `.clinerules`
+
+This prohibition applies to every editor, tool, script, shell command, redirect, or generated file operation.
+
+If completing TASK appears to require changing a protected file:
+STOP and report the conflict.
+
+## Scope
+
+One TASK = one atomic goal.
+
+Do not:
+
+- perform unrelated refactors;
+- add unrequested features;
+- expand into another subsystem;
+- fix unrelated bugs discovered during the task;
+- read large unrelated files.
+
+A separate bug/improvement should be recorded briefly in STATE `Next`, not fixed in the current task unless it blocks acceptance.
+
+## Editing
+
+Prefer targeted edits.
+
+If an edit fails:
+
+1. inspect the current relevant code;
+2. make one corrected attempt.
+
+Do not repeatedly retry the same failed edit.
+
+## Anti-Loop
+
+A failed attempt belongs to the same unresolved problem when:
+
+- the same acceptance criterion/test still fails; and
+- no new root cause has been identified.
+
+Material progress exists only when at least one occurs:
+
+- failure/error meaningfully changes;
+- root cause is localized more precisely;
+- a previously failing targeted test passes;
+- a falsifiable hypothesis narrows the problem.
+
+Another speculative hypothesis alone is NOT progress.
+
+After 2 failed attempts without material progress:
+
+1. STOP.
+2. Update STATE with attempts, blocker, and exact next diagnostic step.
+3. Do not make a third speculative fix.
+
+## Testing
+
+Order:
+
+1. narrow targeted test;
+2. related targeted tests only when necessary;
+3. full suite at most once at the end if TASK requires it.
+
+Do not use the full suite as a debugging loop.
+
+## STATE
+
+At successful completion, blocker, or handoff:
+
+- overwrite `.ai/STATE.md`;
+- increment VERSION;
+- use STATUS only from:
+  `NOT_STARTED`, `RUNNING`, `BLOCKED`, `DONE`;
+- keep STATE concise: approximately <= 2 KB and <= 50 lines;
+- record verified facts and actual test results;
+- keep BASELINE_COMMIT fixed to Git HEAD from task start.
+
+Do not append history.
+Do not store final commit hash in the same STATE update that will be part of that commit.
+Do not cache working-tree clean/dirty state in STATE.
+
+## Truth
+
+- Git HEAD identifies the committed baseline.
+- Working tree identifies current uncommitted changes.
+- Tests describe only the exact code snapshot on which they ran.
+- STATE is a handoff summary and never overrides repository/test evidence.
+- Chat is non-canonical.
+
+## Safety
+
+Without explicit TASK authorization:
+
+- no destructive Git operations;
+- no deletion of user/production data;
+- no production secret changes;
+- no force push;
+- no paid/external service execution.
+
+Never expose secrets.
+
+## Finish
+
+When acceptance criteria are satisfied:
+
+1. update STATE;
+2. report changed files and actual test results;
+3. suggest commit `[TASK-ID] description`;
+4. STOP.
+
+Do not continue improving the project after TASK is complete.
