@@ -1,4 +1,4 @@
-# UAPK v2.1.1 — CODING AGENT RULES
+# UAPK v2.1.2 — CODING AGENT RULES
 
 ## Start
 
@@ -15,11 +15,11 @@ Do not automatically read:
 - unrelated repository files
 - old chats/history
 
-If TASK references a decision ID such as D-017:
-locate and read only that decision block, stopping at its END marker.
+If TASK references a decision ID:
+locate and read only that decision block through its END marker.
 
-Before editing, check whether the working tree is already dirty.
-If unrelated pre-existing changes exist, STOP and report before mixing new work into them.
+Before editing, check whether unrelated pre-existing working-tree changes exist.
+If they do, STOP and report before mixing new work into them.
 
 ## Ownership
 
@@ -36,10 +36,7 @@ Coding agent MUST NOT modify:
 - `.ai/DECISIONS.md`
 - `.clinerules`
 
-This prohibition applies to every editor, tool, script, shell command, redirect, or generated file operation.
-
-If completing TASK appears to require changing a protected file:
-STOP and report the conflict.
+This prohibition applies to every editor, shell command, script, redirect, generated operation, or workaround.
 
 ## Scope
 
@@ -51,20 +48,9 @@ Do not:
 - add unrequested features;
 - expand into another subsystem;
 - fix unrelated bugs discovered during the task;
-- read large unrelated files.
+- include unrelated changes in a commit.
 
-A separate bug/improvement should be recorded briefly in STATE `Next`, not fixed in the current task unless it blocks acceptance.
-
-## Editing
-
-Prefer targeted edits.
-
-If an edit fails:
-
-1. inspect the current relevant code;
-2. make one corrected attempt.
-
-Do not repeatedly retry the same failed edit.
+Record a separate discovered issue briefly in `STATE.Next`.
 
 ## Anti-Loop
 
@@ -73,30 +59,33 @@ A failed attempt belongs to the same unresolved problem when:
 - the same acceptance criterion/test still fails; and
 - no new root cause has been identified.
 
-Material progress exists only when at least one occurs:
+Material progress requires evidence, such as:
 
-- failure/error meaningfully changes;
-- root cause is localized more precisely;
-- a previously failing targeted test passes;
-- a falsifiable hypothesis narrows the problem.
+- the failure meaningfully changed;
+- root cause was localized more precisely;
+- a previously failing targeted test passed;
+- a tested hypothesis narrowed the problem.
 
-Another speculative hypothesis alone is NOT progress.
+A new speculative idea alone is NOT progress.
 
 After 2 failed attempts without material progress:
 
 1. STOP.
-2. Update STATE with attempts, blocker, and exact next diagnostic step.
+2. Update STATE with failed attempts, blocker, and exact next diagnostic step.
 3. Do not make a third speculative fix.
+4. Do not create a success commit or push.
 
 ## Testing
 
 Order:
 
-1. narrow targeted test;
-2. related targeted tests only when necessary;
+1. narrow targeted verification;
+2. related targeted verification only when necessary;
 3. full suite at most once at the end if TASK requires it.
 
-Do not use the full suite as a debugging loop.
+A task is not DONE merely because code was written.
+
+`STATUS=DONE` is allowed only when the current TASK Acceptance Criteria are satisfied and all verification required by the TASK has actually passed.
 
 ## STATE
 
@@ -104,22 +93,94 @@ At successful completion, blocker, or handoff:
 
 - overwrite `.ai/STATE.md`;
 - increment VERSION;
-- use STATUS only from:
+- use only:
   `NOT_STARTED`, `RUNNING`, `BLOCKED`, `DONE`;
-- keep STATE concise: approximately <= 2 KB and <= 50 lines;
-- record verified facts and actual test results;
-- keep BASELINE_COMMIT fixed to Git HEAD from task start.
+- keep BASELINE_COMMIT fixed to Git HEAD from task start;
+- record verified facts and actual verification results;
+- keep STATE concise.
 
-Do not append history.
-Do not store final commit hash in the same STATE update that will be part of that commit.
-Do not cache working-tree clean/dirty state in STATE.
+Do not store the final task commit hash in STATE.
+
+## Git Handoff — DEFAULT DENY
+
+Git commit/push is FORBIDDEN unless the current `.ai/TASK.md` contains an explicit `## Git Handoff` block.
+
+Required form:
+
+```text
+## Git Handoff
+- Commit: ALLOWED | FORBIDDEN
+- Push: ALLOWED | FORBIDDEN
+- Remote: <name>
+- Branch: <name>
+```
+
+If the block is missing, incomplete, ambiguous, or conflicts with repository state:
+do not commit or push.
+
+### Commit preconditions
+
+Before creating a commit, ALL must be true:
+
+- `Commit: ALLOWED`;
+- current TASK Acceptance Criteria satisfied;
+- all verification required by TASK passed;
+- STATE updated for current TASK;
+- `STATUS: DONE`;
+- Blocker is `none`;
+- staged files belong only to the current TASK plus STATE.
+
+Use targeted staging when practical.
+
+Do NOT blindly commit unrelated pre-existing changes.
+
+Recommended commit message:
+
+```text
+[TASK-ID] short description
+```
+
+### Push preconditions
+
+Before push, ALL must be true:
+
+- authorized task commit exists;
+- `Push: ALLOWED`;
+- remote matches TASK;
+- branch matches TASK;
+- normal non-force push is sufficient.
+
+Never use without explicit separate human authorization:
+
+- `git push --force`
+- `git push --force-with-lease`
+- `git reset --hard`
+- `git clean -fd`
+- branch deletion
+- history rewriting
+
+### After successful push
+
+Report:
+
+- TASK ID;
+- commit hash;
+- remote;
+- branch;
+- changed files;
+- exact verification results.
+
+Then STOP.
+
+Do not continue to the next TASK.
 
 ## Truth
 
-- Git HEAD identifies the committed baseline.
-- Working tree identifies current uncommitted changes.
-- Tests describe only the exact code snapshot on which they ran.
-- STATE is a handoff summary and never overrides repository/test evidence.
+- Git HEAD = committed local baseline/current commit.
+- Working tree = current uncommitted changes.
+- Remote branch = last successfully pushed shared state.
+- Tests/verification apply only to the exact snapshot tested.
+- STATE is a handoff summary and never overrides repository evidence.
 - Chat is non-canonical.
 
 ## Safety
@@ -127,20 +188,26 @@ Do not cache working-tree clean/dirty state in STATE.
 Without explicit TASK authorization:
 
 - no destructive Git operations;
-- no deletion of user/production data;
-- no production secret changes;
-- no force push;
+- no production-data deletion;
+- no secret changes;
 - no paid/external service execution.
 
 Never expose secrets.
 
 ## Finish
 
-When acceptance criteria are satisfied:
+If Git Handoff is FORBIDDEN:
 
 1. update STATE;
-2. report changed files and actual test results;
+2. report changed files and verification;
 3. suggest commit `[TASK-ID] description`;
 4. STOP.
 
-Do not continue improving the project after TASK is complete.
+If Git Handoff is ALLOWED:
+
+1. verify all commit/push preconditions;
+2. update STATE;
+3. commit only authorized task scope;
+4. push only if explicitly allowed;
+5. report handoff evidence;
+6. STOP.
