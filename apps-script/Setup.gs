@@ -41,14 +41,14 @@ const CONFIG = {
  */
 function setupProject() {
   try {
-    // Create or get the Google Form
-    let form = FormApp.create(CONFIG.FORM_TITLE);
+    // Get or create the Google Form
+    let form = getOrCreateForm();
     
-    // Add the required form questions
-    addFormQuestions(form);
+    // Add the required form questions (only if not already present)
+    addFormQuestionsIfMissing(form);
     
-    // Create or get the spreadsheet to link responses to
-    let spreadsheet = SpreadsheetApp.create(CONFIG.SPREADSHEET_NAME);
+    // Get or create the spreadsheet to link responses to
+    let spreadsheet = getOrCreateSpreadsheet();
     
     // Link the form to the spreadsheet
     form.setDestination(FormApp.DestinationType.SPREADSHEET, spreadsheet.getId());
@@ -63,6 +63,92 @@ function setupProject() {
   } catch (error) {
     Logger.log('Error during setup: ' + error.toString());
     throw error;
+  }
+}
+
+/**
+ * Gets existing form from PropertiesService or creates a new one
+ * @returns {Form} The Google Form
+ */
+function getOrCreateForm() {
+  const properties = PropertiesService.getScriptProperties();
+  const formId = properties.getProperty('FORM_ID');
+  
+  if (formId) {
+    try {
+      // Try to open the existing form
+      const form = FormApp.openById(formId);
+      return form;
+    } catch (error) {
+      // If form doesn't exist, clear the property and create new
+      properties.deleteProperty('FORM_ID');
+      Logger.log('Existing form not found, creating new form');
+    }
+  }
+  
+  // Create new form
+  const form = FormApp.create(CONFIG.FORM_TITLE);
+  properties.setProperty('FORM_ID', form.getId());
+  return form;
+}
+
+/**
+ * Gets existing spreadsheet from PropertiesService or creates a new one
+ * @returns {Spreadsheet} The Google Spreadsheet
+ */
+function getOrCreateSpreadsheet() {
+  const properties = PropertiesService.getScriptProperties();
+  const spreadsheetId = properties.getProperty('SPREADSHEET_ID');
+  
+  if (spreadsheetId) {
+    try {
+      // Try to open the existing spreadsheet
+      const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+      return spreadsheet;
+    } catch (error) {
+      // If spreadsheet doesn't exist, clear the property and create new
+      properties.deleteProperty('SPREADSHEET_ID');
+      Logger.log('Existing spreadsheet not found, creating new spreadsheet');
+    }
+  }
+  
+  // Create new spreadsheet
+  const spreadsheet = SpreadsheetApp.create(CONFIG.SPREADSHEET_NAME);
+  properties.setProperty('SPREADSHEET_ID', spreadsheet.getId());
+  return spreadsheet;
+}
+
+/**
+ * Adds form questions only if they are not already present
+ * @param {Form} form - The Google Form to add questions to
+ */
+function addFormQuestionsIfMissing(form) {
+  const items = form.getItems();
+  const itemTitles = items.map(item => item.getTitle());
+  
+  // Check if all required questions are already present
+  const requiredQuestions = ['Name', 'Email', 'Request', 'Notes'];
+  const missingQuestions = requiredQuestions.filter(title => !itemTitles.includes(title));
+  
+  if (missingQuestions.length > 0) {
+    // Add only the missing questions
+    missingQuestions.forEach(title => {
+      if (title === 'Name' || title === 'Email') {
+        form.addTextItem()
+            .setTitle(title)
+            .setRequired(title === 'Name' || title === 'Email');
+      } else if (title === 'Request') {
+        form.addParagraphTextItem()
+            .setTitle(title)
+            .setRequired(true);
+      } else if (title === 'Notes') {
+        form.addParagraphTextItem()
+            .setTitle(title)
+            .setRequired(false);
+      }
+    });
+  } else {
+    Logger.log('All form questions already exist');
   }
 }
 
