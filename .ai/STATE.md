@@ -1,19 +1,22 @@
 # STATE
-VERSION: 0
-TASK_ID: T-000
-STATUS: NOT_STARTED
-UPDATED: YYYY-MM-DD
-BRANCH: <branch>
+VERSION: 1
+TASK_ID: T-001
+STATUS: DONE
+UPDATED: 2026-08-25
+BRANCH: main
 BASELINE_COMMIT: <git HEAD at task start>
 
 ## Working
-- <verified fact>
+- Created apps-script/Setup.gs with setupProject() function
+- Implemented Google Form creation with 4 required questions
+- Configured spreadsheet linking and operational columns
+- Added idempotent logic for safe repeated execution
 
 ## Changed
-- none
+- apps-script/Setup.gs
 
 ## Tests
-- Targeted: NOT RUN
+- Targeted: Static verification completed - syntax valid, required labels present, no forbidden integrations
 - Full: NOT RUN
 
 ## Failed
@@ -23,4 +26,4 @@ BASELINE_COMMIT: <git HEAD at task start>
 - none
 
 ## Next
-- <one immediate action or none>
+- human Google Workspace integration verification
