@@ -1,34 +1,45 @@
 # STATE
-VERSION: 3
+
+VERSION: 4
 TASK_ID: T-001
 STATUS: DONE
 UPDATED: 2026-08-26
 BRANCH: main
-BASELINE_COMMIT: <git HEAD at task start>
+BASELINE_COMMIT: 29b613535a54e49a0ee96cbff62532b4ea57d752
 
 ## Working
-- Updated apps-script/Setup.gs with idempotent logic using PropertiesService
-- Modified setupProject() to getOrCreateForm() and getOrCreateSpreadsheet()
-- Added addFormQuestionsIfMissing() to prevent duplicate form questions
-- Implemented error handling for missing form/spreadsheet objects
-- Verified static code correctness
+
+* Created the Google Workspace intake foundation in `apps-script/Setup.gs`.
+* `setupProject()` creates and reuses the same Google Form and Spreadsheet using `PropertiesService`.
+* Form contains `Name`, `Email`, `Request`, and `Notes`.
+* Response sheet contains the required operational columns.
+* `Error Log` and `Dashboard` sheets are created without duplication.
+* Human Google Workspace integration verification passed.
 
 ## Changed
-- apps-script/Setup.gs
-- .ai/STATE.md
+
+* apps-script/Setup.gs
+* .ai/STATE.md
 
 ## Tests
-- Targeted: Static verification completed - syntax valid, required labels present, no forbidden integrations
-- Full: NOT RUN
+
+* Targeted: PASS — static verification completed; syntax valid, required labels present, no forbidden integrations.
+* Integration: PASS — `setupProject()` executed twice with unchanged Form ID and Spreadsheet ID; no duplicate questions, operational columns, or additional sheets.
+* Form submission: PASS — test submission appeared in `Project Intake Responses`.
+* Full: NOT REQUIRED
 
 ## Failed
-- none
+
+* none
 
 ## Blocker
-- none
+
+* none
 
 ## Verification
-- PASSED: The second setupProject() run reused the same Form ID and Spreadsheet ID, created no duplicate questions/columns/sheets, and a test Form submission appeared in Project Intake Responses.
+
+* PASSED: T-001 acceptance criteria verified against the real Google Workspace workflow.
 
 ## Next
-- Perform human integration verification: run setupProject() twice and verify Form ID/Spreadsheet ID remain unchanged
+
+* prepare T-002
